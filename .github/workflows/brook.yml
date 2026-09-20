@@ -1,0 +1,21 @@
+name: Brook Worker
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: timeout 500 python stock_screener.py --worker
+      - run: |
+          git config user.name "brook-bot"
+          git config user.email "brook-bot@users.noreply.github.com"
+          git add pools_*.json broker_config_*.json starling_config_*.json 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "Brook cycle update"
+          git push
